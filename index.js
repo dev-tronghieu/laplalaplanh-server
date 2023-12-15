@@ -1,5 +1,7 @@
 require("dotenv").config();
-require("./services/mqtt").startMqtt();
+
+const { getDevices } = require("./services/firebase");
+const { startMqtt } = require("./services/mqtt");
 
 const express = require("express");
 const app = express();
@@ -9,6 +11,9 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 
-app.listen(port, () => {
+app.listen(port, async () => {
     console.log(`LLLL Server listening on port ${port}`);
+
+    const devices = await getDevices();
+    await startMqtt(devices);
 });
