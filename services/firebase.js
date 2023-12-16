@@ -1,5 +1,10 @@
 const { initializeApp } = require("firebase/app");
-const { getFirestore, collection, onSnapshot } = require("firebase/firestore");
+const {
+    getFirestore,
+    collection,
+    onSnapshot,
+    addDoc,
+} = require("firebase/firestore");
 
 const firebaseConfig = {
     apiKey: process.env.VITE_FIREBASE_API_KEY,
@@ -29,6 +34,12 @@ const watchDevices = async (callback) => {
     return unsubscribe;
 };
 
+const storeStatus = async (device, status) => {
+    const statusLogs = collection(db, "Devices", device, "StatusLogs");
+    await addDoc(statusLogs, status);
+};
+
 module.exports = {
     watchDevices,
+    storeStatus,
 };

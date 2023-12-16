@@ -1,4 +1,5 @@
 const mqtt = require("mqtt");
+const { storeStatus } = require("./firebase");
 
 const TYPE = {
     /* Status
@@ -32,10 +33,7 @@ const handleReceiveMessage = (topic, message) => {
         case TYPE.STATUS:
             const temperature = data.temperature;
             const epochTime = data.epochTime;
-            const date = new Date(epochTime * 1000);
-            console.log(
-                `[${date.toLocaleString()} - ${device}] ${temperature} °C`
-            );
+            storeStatus(device, { temperature, epochTime });
             break;
         case TYPE.ACTION:
             console.log(`Device ${device} action: ${data}`);
