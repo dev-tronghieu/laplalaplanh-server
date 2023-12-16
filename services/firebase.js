@@ -1,5 +1,5 @@
 const { initializeApp } = require("firebase/app");
-const { getFirestore, getDocs, collection } = require("firebase/firestore");
+const { getFirestore, collection, onSnapshot } = require("firebase/firestore");
 
 const firebaseConfig = {
     apiKey: process.env.VITE_FIREBASE_API_KEY,
@@ -15,24 +15,20 @@ const firebaseApp = initializeApp(firebaseConfig);
 
 const db = getFirestore(firebaseApp);
 
-const getDevices = async () => {
-    const devices = [];
-
+const watchDevices = async (callback) => {
     const devicesCollection = collection(db, "Devices");
 
-    try {
-        const querySnapshot = await getDocs(devicesCollection);
+    const unsubscribe = onSnapshot(devicesCollection, (querySnapshot) => {
+        const newDevices = [];
         querySnapshot.forEach((doc) => {
-            devices.push(doc.id);
+            newDevices.push(doc.id);
         });
+        callback(newDevices);
+    });
 
-        return devices;
-    } catch (error) {
-        console.error("Error getting documents:", error);
-        throw error;
-    }
+    return unsubscribe;
 };
 
 module.exports = {
-    getDevices,
+    watchDevices,
 };

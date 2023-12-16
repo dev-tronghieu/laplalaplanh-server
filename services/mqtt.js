@@ -1,16 +1,27 @@
 const mqtt = require("mqtt");
 
 const TYPE = {
+    /* Status
+    @params: {
+        temperature: number
+        epochTime: number
+    }
+    */
     STATUS: "status",
+
+    /* Action
+    @params: {
+        id: string
+        type: string
+        data: string
+    }
+    */
     ACTION: "action",
 };
 
-/* Status
-@params: {
-    temperature: number
-    epochTime: number
-}
-*/
+const mqttClient = mqtt.connect(process.env.VITE_MQTT, {
+    connectTimeout: 5000,
+});
 
 const handleReceiveMessage = (topic, message) => {
     const type = topic.split("/")[1];
@@ -34,21 +45,32 @@ const handleReceiveMessage = (topic, message) => {
     }
 };
 
-const startMqtt = async (devices) => {
-    const mqttClient = mqtt.connect(process.env.VITE_MQTT, {
-        connectTimeout: 5000,
-    });
-
-    mqttClient.on("connect", () => {
-        console.log("MQTT Connected");
-        for (const device of devices) {
-            mqttClient.subscribe(`laplalaplanh/status/${device}`);
-            console.log(`Subscribed to laplalaplanh/status/${device}`);
-        }
-        mqttClient.on("message", handleReceiveMessage);
+const waitForConnection = () => {
+    return new Promise((resolve) => {
+        mqttClient.on("connect", () => {
+            mqttClient.on("message", handleReceiveMessage);
+            console.log("MQTT Connected");
+            resolve();
+        });
     });
 };
 
+const subscribe = async (devices) => {
+    for (const device of devices) {
+        mqttClient.subscribe(`laplalaplanh/status/${device}`);
+        console.log(`Subscribed to laplalaplanh/status/${device}`);
+    }
+};
+
+const unsubscribe = async (devices) => {
+    for (const device of devices) {
+        mqttClient.unsubscribe(`laplalaplanh/status/${device}`);
+        console.log(`Unsubscribed to laplalaplanh/status/${device}`);
+    }
+};
+
 module.exports = {
-    startMqtt,
+    waitForConnection,
+    subscribe,
+    unsubscribe,
 };
