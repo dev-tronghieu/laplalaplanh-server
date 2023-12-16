@@ -1,5 +1,5 @@
 const mqtt = require("mqtt");
-const { storeStatus } = require("./firebase");
+const { watchDevices, storeStatus } = require("./firebase");
 
 const TYPE = {
     /* Status
@@ -43,16 +43,6 @@ const handleReceiveMessage = (topic, message) => {
     }
 };
 
-const waitForConnection = () => {
-    return new Promise((resolve) => {
-        mqttClient.on("connect", () => {
-            mqttClient.on("message", handleReceiveMessage);
-            console.log("MQTT Connected");
-            resolve();
-        });
-    });
-};
-
 const subscribe = async (devices) => {
     for (const device of devices) {
         mqttClient.subscribe(`laplalaplanh/status/${device}`);
@@ -67,8 +57,29 @@ const unsubscribe = async (devices) => {
     }
 };
 
+const waitForConnection = () => {
+    return new Promise((resolve) => {
+        mqttClient.on("connect", () => {
+            mqttClient.on("message", handleReceiveMessage);
+            console.log("MQTT Connected");
+            resolve();
+        });
+    });
+};
+
+let devices = [];
+
+const start = async () => {
+    await watchDevices((newDevices) => {
+        const devicesToAdd = newDevices.filter((x) => !devices.includes(x));
+        const devicesToRemove = devices.filter((x) => !newDevices.includes(x));
+        devices = newDevices;
+        subscribe(devicesToAdd);
+        unsubscribe(devicesToRemove);
+    });
+};
+
 module.exports = {
     waitForConnection,
-    subscribe,
-    unsubscribe,
+    start,
 };
