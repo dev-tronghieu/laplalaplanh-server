@@ -1,5 +1,10 @@
 const mqtt = require("mqtt");
-const { watchDevices, storeStatus } = require("./firebase");
+const {
+    watchDevices,
+    storeStatus,
+    getConfig,
+    defaultConfig,
+} = require("./firebase");
 
 const TYPE = {
     /* Status
@@ -18,6 +23,11 @@ const TYPE = {
     }
     */
     ACTION: "action",
+
+    /* Sync
+    @params: string
+    */
+    SYNC: "sync",
 };
 
 const mqttClient = mqtt.connect(process.env.VITE_MQTT, {
@@ -29,6 +39,10 @@ const handleReceiveMessage = (topic, message) => {
     const device = topic.split("/")[2];
     const data = JSON.parse(message.toString());
 
+    console.log(
+        `Received message from [${type}] ${device}: ${JSON.stringify(data)}`
+    );
+
     switch (type) {
         case TYPE.STATUS:
             const temperature = data.temperature;
@@ -38,6 +52,22 @@ const handleReceiveMessage = (topic, message) => {
         case TYPE.ACTION:
             console.log(`Device ${device} action: ${data}`);
             break;
+        case TYPE.SYNC:
+            getConfig(device)
+                .then((config) => {
+                    mqttClient.publish(
+                        `laplalaplanh/config/${device}`,
+                        JSON.stringify(config)
+                    );
+                })
+                .catch((error) => {
+                    console.log("--> error getting config", error);
+                });
+            // mqttClient.publish(
+            //     `laplalaplanh/config/${device}`,
+            //     JSON.stringify(defaultConfig)
+            // );
+            break;
         default:
             console.log(`Unknown type: ${type}`);
     }
@@ -46,14 +76,16 @@ const handleReceiveMessage = (topic, message) => {
 const subscribe = async (devices) => {
     for (const device of devices) {
         mqttClient.subscribe(`laplalaplanh/status/${device}`);
-        console.log(`Subscribed to laplalaplanh/status/${device}`);
+        mqttClient.subscribe(`laplalaplanh/sync/${device}`);
+        console.log(`Subscribed to ${device}`);
     }
 };
 
 const unsubscribe = async (devices) => {
     for (const device of devices) {
         mqttClient.unsubscribe(`laplalaplanh/status/${device}`);
-        console.log(`Unsubscribed to laplalaplanh/status/${device}`);
+        mqttClient.unsubscribe(`laplalaplanh/sync/${device}`);
+        console.log(`Unsubscribed to ${device}`);
     }
 };
 

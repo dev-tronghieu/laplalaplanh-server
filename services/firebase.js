@@ -5,6 +5,7 @@ const {
     onSnapshot,
     doc,
     addDoc,
+    getDoc,
     updateDoc,
 } = require("firebase/firestore");
 
@@ -35,10 +36,9 @@ const storeStatus = async (device, status) => {
 };
 
 const getConfig = async (device) => {
-    const config = collection(db, "Devices", device);
-    const querySnapshot = await getDocs(config);
-    const configData = querySnapshot.docs.map((doc) => doc.data());
-    return configData.config;
+    const configRef = doc(db, "Devices", device);
+    const configDoc = await getDoc(configRef);
+    return configDoc.data().config;
 };
 
 const setConfig = async (device, config) => {
@@ -67,4 +67,5 @@ module.exports = {
     storeStatus,
     getConfig,
     watchDevices,
+    defaultConfig,
 };
