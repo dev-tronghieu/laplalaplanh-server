@@ -3,7 +3,9 @@ const {
     getFirestore,
     collection,
     onSnapshot,
+    doc,
     addDoc,
+    updateDoc,
 } = require("firebase/firestore");
 
 const firebaseConfig = {
@@ -20,18 +22,11 @@ const firebaseApp = initializeApp(firebaseConfig);
 
 const db = getFirestore(firebaseApp);
 
-const watchDevices = async (callback) => {
-    const devicesCollection = collection(db, "Devices");
-
-    const unsubscribe = onSnapshot(devicesCollection, (querySnapshot) => {
-        const newDevices = [];
-        querySnapshot.forEach((doc) => {
-            newDevices.push(doc.id);
-        });
-        callback(newDevices);
-    });
-
-    return unsubscribe;
+const defaultConfig = {
+    power: "off",
+    operatingMode: "auto",
+    effect: "single-color",
+    color: "ffffff",
 };
 
 const storeStatus = async (device, status) => {
@@ -39,7 +34,37 @@ const storeStatus = async (device, status) => {
     await addDoc(statusLogs, status);
 };
 
+const getConfig = async (device) => {
+    const config = collection(db, "Devices", device);
+    const querySnapshot = await getDocs(config);
+    const configData = querySnapshot.docs.map((doc) => doc.data());
+    return configData.config;
+};
+
+const setConfig = async (device, config) => {
+    const configRef = doc(db, "Devices", device);
+    await updateDoc(configRef, { config });
+};
+
+const watchDevices = async (callback) => {
+    const devicesCollection = collection(db, "Devices");
+
+    const unsubscribe = onSnapshot(devicesCollection, (querySnapshot) => {
+        const newDevices = [];
+        querySnapshot.forEach((doc) => {
+            newDevices.push(doc.id);
+            if (doc.data().config === undefined) {
+                setConfig(doc.id, defaultConfig);
+            }
+        });
+        callback(newDevices);
+    });
+
+    return unsubscribe;
+};
+
 module.exports = {
-    watchDevices,
     storeStatus,
+    getConfig,
+    watchDevices,
 };
