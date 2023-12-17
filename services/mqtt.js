@@ -4,6 +4,8 @@ const {
     storeStatus,
     getConfig,
     setConfig,
+    alertWarningTemperature,
+    WARNING_TEMPERATURE,
 } = require("./firebase");
 
 const TYPE = {
@@ -45,7 +47,13 @@ const handleReceiveMessage = async (topic, message) => {
         case TYPE.STATUS:
             const temperature = data.temperature;
             const epochTime = data.epochTime;
+
+            if (temperature >= WARNING_TEMPERATURE) {
+                await alertWarningTemperature(device, temperature);
+            }
+
             storeStatus(device, { temperature, epochTime });
+
             break;
         case TYPE.ACTION:
             // TODO:

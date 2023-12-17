@@ -6,7 +6,12 @@ const {
     doc,
     addDoc,
     getDoc,
+    getDocs,
     updateDoc,
+    query,
+    where,
+    limit,
+    orderBy,
 } = require("firebase/firestore");
 
 const firebaseConfig = {
@@ -63,10 +68,75 @@ const watchDevices = async (callback) => {
     return unsubscribe;
 };
 
+/**
+ * @param {string[]} to
+ * @param {string} subject
+ * @param {string} html
+ */
+const alertMail = async ({ to, subject, html }) => {
+    const mailCollection = collection(db, "mail");
+    await addDoc(mailCollection, { to, message: { subject, html } });
+};
+
+const WARNING_TEMPERATURE = 56;
+const DANGER_TEMPERATURE = 65;
+
+const alertWarningTemperature = async (device, temperature) => {
+    const statusLogsRef = collection(db, "Devices", device, "StatusLogs");
+
+    const lastStatusQuery = query(
+        statusLogsRef,
+        orderBy("epochTime", "desc"),
+        limit(1)
+    );
+
+    const lastStatusSnapshot = await getDocs(lastStatusQuery);
+
+    const lastStatus = lastStatusSnapshot.docs[0].data();
+
+    const lastTemperature = lastStatus.temperature;
+
+    if (
+        lastTemperature >= WARNING_TEMPERATURE &&
+        temperature < DANGER_TEMPERATURE
+    ) {
+        return;
+    }
+
+    const userCollection = collection(db, "Users");
+
+    const queryRef = query(
+        userCollection,
+        where("devices", "array-contains", device)
+    );
+
+    const querySnapshot = await getDocs(queryRef);
+    const users = [];
+
+    querySnapshot.forEach((doc) => {
+        users.push(doc.id);
+    });
+
+    const title = `[ĐÈN LẤP LA LẤP LÁNH]: CẢNH BÁO NHIỆT ĐỘ CAO!!!`;
+
+    let html = `
+        <h1>Cảnh báo</h1>
+        <p>Thiết bị ${device} đạt ${temperature}°C vào lúc ${new Date().toLocaleString()}</p>
+    `;
+
+    if (temperature >= DANGER_TEMPERATURE) {
+        html += `<p>Thiết bị đã tự động tắt để đảm bảo an toàn</p>`;
+    }
+
+    alertMail({ to: users, subject: title, html });
+};
+
 module.exports = {
     storeStatus,
     getConfig,
     setConfig,
     watchDevices,
+    alertWarningTemperature,
     defaultConfig,
+    WARNING_TEMPERATURE,
 };
