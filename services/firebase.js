@@ -66,6 +66,7 @@ const watchDevices = async (callback) => {
 module.exports = {
     storeStatus,
     getConfig,
+    setConfig,
     watchDevices,
     defaultConfig,
 };
