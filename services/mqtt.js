@@ -38,6 +38,8 @@ const mqttClient = mqtt.connect(process.env.VITE_MQTT, {
     connectTimeout: 5000,
 });
 
+const actionMap = new Map();
+
 const handleReceiveMessage = async (topic, message) => {
     const type = topic.split("/")[1];
     const device = topic.split("/")[2];
@@ -63,25 +65,46 @@ const handleReceiveMessage = async (topic, message) => {
 
             const actionType = data.type;
             const actionData = data.data;
-            const currentConfig = await getConfig(device);
-            const newConfig = { ...currentConfig };
+
             switch (actionType) {
-                case "set-power":
-                    newConfig.power = actionData;
-                    break;
-                case "set-operating-mode":
-                    newConfig.operatingMode = actionData;
-                    break;
-                case "change-effect":
-                    newConfig.effect = actionData;
-                    break;
-                case "change-color":
-                    newConfig.color = actionData;
+                case "result":
+                    if (actionData === "success") {
+                        const config = await getConfig(device);
+                        const action = actionMap.get(data.id);
+                        if (!action) {
+                            console.log(`Action ${data.id} not found`);
+                            break;
+                        }
+
+                        switch (action.type) {
+                            case "set-power":
+                                config.power = action.data;
+                                break;
+                            case "set-operating-mode":
+                                config.operatingMode = action.data;
+                                break;
+                            case "change-effect":
+                                config.effect = action.data;
+                                break;
+                            case "change-color":
+                                config.color = action.data;
+                                break;
+                        }
+
+                        setConfig(device, config);
+                    }
+                    actionMap.delete(data.id);
                     break;
                 default:
-                    console.log(`Unknown action type: ${actionType}`);
+                    actionMap.set(data.id, {
+                        type: actionType,
+                        data: actionData,
+                    });
+                    setTimeout(() => {
+                        actionMap.delete(data.id);
+                        console.log(`Action ${data.id} timeout`, actionMap);
+                    }, 1000 * 10);
             }
-            await setConfig(device, newConfig);
             break;
         case TYPE.SYNC:
             const config = await getConfig(device);
