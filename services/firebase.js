@@ -101,6 +101,10 @@ const alertWarningTemperature = async (deviceId, temperature) => {
 
     const lastTemperature = lastStatus.temperature;
 
+    if (lastTemperature >= DANGER_TEMPERATURE) {
+        return;
+    }
+
     if (
         lastTemperature >= WARNING_TEMPERATURE &&
         temperature < DANGER_TEMPERATURE
@@ -118,7 +122,9 @@ const alertWarningTemperature = async (deviceId, temperature) => {
         <h1>Cảnh báo</h1>
         <p>Thiết bị ${
             deviceData.name
-        } đạt ${temperature}°C vào lúc ${new Date().toLocaleString()}</p>
+        } đạt ${temperature}°C vào lúc ${new Date().toLocaleString("vi-VN", {
+        timeZone: "Asia/Ho_Chi_Minh",
+    })}</p>
     `;
 
     if (temperature >= DANGER_TEMPERATURE) {
