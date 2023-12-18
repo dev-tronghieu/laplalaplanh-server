@@ -106,11 +106,11 @@ const handleReceiveMessage = async (topic, message) => {
                     const timeoutAt = data.timeoutAt;
                     const timeoutAfter = timeoutAt - Date.now();
 
-                    setTimeout(() => {
-                        console.log(
-                            `[${device}] Action ${data.id} will timeout in ${timeoutAfter}ms`
-                        );
+                    console.log(
+                        `[${device}] Action ${data.id} will timeout in ${timeoutAfter}ms`
+                    );
 
+                    setTimeout(() => {
                         if (actionMap.has(data.id)) {
                             actionMap.delete(data.id);
                             console.log(
