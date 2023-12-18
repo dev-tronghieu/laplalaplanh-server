@@ -9,7 +9,6 @@ const {
     getDocs,
     updateDoc,
     query,
-    where,
     limit,
     orderBy,
 } = require("firebase/firestore");
@@ -97,19 +96,23 @@ const alertWarningTemperature = async (deviceId, temperature) => {
 
     const lastStatusSnapshot = await getDocs(lastStatusQuery);
 
-    const lastStatus = lastStatusSnapshot.docs[0].data();
+    try {
+        const lastStatus = lastStatusSnapshot.docs[0].data();
 
-    const lastTemperature = lastStatus.temperature;
+        const lastTemperature = lastStatus.temperature;
 
-    if (lastTemperature >= DANGER_TEMPERATURE) {
-        return;
-    }
+        if (lastTemperature >= DANGER_TEMPERATURE) {
+            return;
+        }
 
-    if (
-        lastTemperature >= WARNING_TEMPERATURE &&
-        temperature < DANGER_TEMPERATURE
-    ) {
-        return;
+        if (
+            lastTemperature >= WARNING_TEMPERATURE &&
+            temperature < DANGER_TEMPERATURE
+        ) {
+            return;
+        }
+    } catch (error) {
+        console.log("[ERROR] alertWarningTemperature", error);
     }
 
     const deviceRef = doc(db, "Devices", deviceId);
