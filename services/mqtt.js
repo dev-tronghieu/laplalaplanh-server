@@ -2,6 +2,7 @@ const mqtt = require("mqtt");
 const {
     watchDevices,
     storeStatus,
+    storeAction,
     getConfig,
     setConfig,
     alertWarningTemperature,
