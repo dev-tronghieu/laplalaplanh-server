@@ -104,10 +104,10 @@ const handleReceiveMessage = async (topic, message) => {
                     });
 
                     const timeoutAt = data.timeoutAt;
-                    const timeoutAfter = timeoutAt - Date.now();
+                    const timeoutAfterMs = timeoutAt * 1000 - Date.now();
 
                     console.log(
-                        `[${device}] Action ${data.id} will timeout in ${timeoutAfter}ms`
+                        `[${device}] Action ${data.id} will timeout in ${timeoutAfterMs}ms`
                     );
 
                     setTimeout(() => {
@@ -117,7 +117,7 @@ const handleReceiveMessage = async (topic, message) => {
                                 `[${device}] Action ${data.id} timeout`
                             );
                         }
-                    }, timeoutAfter);
+                    }, timeoutAfterMs);
             }
             break;
 
