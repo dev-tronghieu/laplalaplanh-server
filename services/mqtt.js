@@ -91,6 +91,8 @@ const handleReceiveMessage = async (topic, message) => {
                                 break;
                         }
 
+                        console.log(`Action ${data.id} success`, config);
+
                         setConfig(device, config);
                     }
                     actionMap.delete(data.id);
@@ -101,8 +103,10 @@ const handleReceiveMessage = async (topic, message) => {
                         data: actionData,
                     });
                     setTimeout(() => {
-                        actionMap.delete(data.id);
-                        console.log(`Action ${data.id} timeout`, actionMap);
+                        if (actionMap.has(data.id)) {
+                            actionMap.delete(data.id);
+                            console.log(`Action ${data.id} timeout`, actionMap);
+                        }
                     }, 1000 * 10);
             }
             break;
