@@ -67,7 +67,9 @@ const handleReceiveMessage = async (topic, message) => {
                         const config = await getConfig(device);
                         const action = actionMap.get(data.id);
                         if (!action) {
-                            console.log(`Action ${data.id} not found`);
+                            console.log(
+                                `[${device}] Action ${data.id} not found`
+                            );
                             break;
                         }
 
@@ -86,7 +88,10 @@ const handleReceiveMessage = async (topic, message) => {
                                 break;
                         }
 
-                        console.log(`Action ${data.id} success`, config);
+                        console.log(
+                            `[${device}] Action ${data.id} success`,
+                            config
+                        );
 
                         setConfig(device, config);
                     }
@@ -103,19 +108,21 @@ const handleReceiveMessage = async (topic, message) => {
 
                     setTimeout(() => {
                         console.log(
-                            `Action ${data.id} will timeout in ${timeoutAfter}ms`
+                            `[${device}] Action ${data.id} will timeout in ${timeoutAfter}ms`
                         );
 
                         if (actionMap.has(data.id)) {
                             actionMap.delete(data.id);
-                            console.log(`Action ${data.id} timeout`, actionMap);
+                            console.log(
+                                `[${device}] Action ${data.id} timeout`
+                            );
                         }
                     }, timeoutAfter);
             }
             break;
 
         case TYPE.SYNC:
-            console.log(`Syncing ${device}`);
+            console.log(`[${device}] Syncing`);
             const config = await getConfig(device);
             mqttClient.publish(
                 `laplalaplanh/config/${device}`,
