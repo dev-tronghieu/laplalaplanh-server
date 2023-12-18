@@ -49,13 +49,14 @@ const handleReceiveMessage = async (topic, message) => {
     switch (type) {
         case TYPE.STATUS:
             const temperature = data.temperature;
+            const lightTime = data.lightTime;
             const epochTime = data.epochTime;
 
             if (temperature >= WARNING_TEMPERATURE) {
                 await alertWarningTemperature(device, temperature);
             }
 
-            storeStatus(device, { temperature, epochTime });
+            storeStatus(device, { temperature, lightTime, epochTime });
 
             break;
         case TYPE.ACTION:
