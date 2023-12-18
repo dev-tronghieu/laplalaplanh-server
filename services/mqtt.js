@@ -93,7 +93,12 @@ const handleReceiveMessage = async (topic, message) => {
                             config
                         );
 
-                        setConfig(device, config);
+                        await setConfig(device, config);
+                        await storeAction(device, {
+                            type: action.type,
+                            data: action.data,
+                            epochTime: Date.now() / 1000,
+                        });
                     }
                     actionMap.delete(data.id);
                     break;

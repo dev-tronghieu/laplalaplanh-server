@@ -40,6 +40,11 @@ const storeStatus = async (device, status) => {
     await addDoc(statusLogs, status);
 };
 
+const storeAction = async (device, action) => {
+    const actionLogs = collection(db, "Devices", device, "ActionLogs");
+    await addDoc(actionLogs, action);
+};
+
 const getConfig = async (device) => {
     const configRef = doc(db, "Devices", device);
     const configDoc = await getDoc(configRef);
@@ -133,6 +138,7 @@ const alertWarningTemperature = async (device, temperature) => {
 
 module.exports = {
     storeStatus,
+    storeAction,
     getConfig,
     setConfig,
     watchDevices,
