@@ -86,8 +86,8 @@ const alertMail = async ({ to, subject, html }) => {
 const WARNING_TEMPERATURE = 56;
 const DANGER_TEMPERATURE = 65;
 
-const alertWarningTemperature = async (device, temperature) => {
-    const statusLogsRef = collection(db, "Devices", device, "StatusLogs");
+const alertWarningTemperature = async (deviceId, temperature) => {
+    const statusLogsRef = collection(db, "Devices", deviceId, "StatusLogs");
 
     const lastStatusQuery = query(
         statusLogsRef,
@@ -108,32 +108,24 @@ const alertWarningTemperature = async (device, temperature) => {
         return;
     }
 
-    const userCollection = collection(db, "Users");
-
-    const queryRef = query(
-        userCollection,
-        where("devices", "array-contains", device)
-    );
-
-    const querySnapshot = await getDocs(queryRef);
-    const users = [];
-
-    querySnapshot.forEach((doc) => {
-        users.push(doc.id);
-    });
+    const deviceRef = doc(db, "Devices", deviceId);
+    const deviceDoc = await getDoc(deviceRef);
+    const deviceData = deviceDoc.data();
 
     const title = `[ĐÈN LẤP LA LẤP LÁNH]: CẢNH BÁO NHIỆT ĐỘ CAO!!!`;
 
     let html = `
         <h1>Cảnh báo</h1>
-        <p>Thiết bị ${device} đạt ${temperature}°C vào lúc ${new Date().toLocaleString()}</p>
+        <p>Thiết bị ${
+            deviceData.name
+        } đạt ${temperature}°C vào lúc ${new Date().toLocaleString()}</p>
     `;
 
     if (temperature >= DANGER_TEMPERATURE) {
         html += `<p>Thiết bị đã tự động tắt để đảm bảo an toàn</p>`;
     }
 
-    alertMail({ to: users, subject: title, html });
+    alertMail({ to: deviceData.users, subject: title, html });
 };
 
 module.exports = {
