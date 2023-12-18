@@ -58,11 +58,6 @@ const handleReceiveMessage = async (topic, message) => {
 
             break;
         case TYPE.ACTION:
-            // TODO:
-            // 1. If receiving action, store it to an action map (key = data.id)
-            // 2. If receiving an action result, update the new config and remove the action from the map
-            // 3. Timeout action from map if no result is received (maybe 5 seconds)
-
             const actionType = data.type;
             const actionData = data.data;
 
@@ -102,21 +97,32 @@ const handleReceiveMessage = async (topic, message) => {
                         type: actionType,
                         data: actionData,
                     });
+
+                    const timeoutAt = data.timeoutAt;
+                    const timeoutAfter = timeoutAt - Date.now();
+
                     setTimeout(() => {
+                        console.log(
+                            `Action ${data.id} will timeout in ${timeoutAfter}ms`
+                        );
+
                         if (actionMap.has(data.id)) {
                             actionMap.delete(data.id);
                             console.log(`Action ${data.id} timeout`, actionMap);
                         }
-                    }, 1000 * 10);
+                    }, timeoutAfter);
             }
             break;
+
         case TYPE.SYNC:
+            console.log(`Syncing ${device}`);
             const config = await getConfig(device);
             mqttClient.publish(
                 `laplalaplanh/config/${device}`,
                 JSON.stringify(config)
             );
             break;
+
         default:
             console.log(`Unknown type: ${type}`);
     }
